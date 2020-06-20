@@ -1,0 +1,134 @@
+#!/bin/bash
+
+# for loop
+
+for var in first second third fourth fifth; do
+	echo The $var item
+done
+
+# to deal with complex values
+
+for var in first "the second" "the third" "I'll do it"; do
+	echo "This is: $var"
+done
+
+# command substitution
+my_file="myfile"
+
+for var in $(cat $my_file); do
+	echo " $var"
+done
+
+# field separator
+IFS=$'\n'
+for var in $(cat $my_file); do
+	echo " $var"
+done
+
+# iterating over the directory
+
+for obj in /gennadiy/howto/*; do
+	if [ -d "$obj" ]; then
+		echo "$obj is a folder"
+	elif [ -f "$obj" ]; then
+		echo "$obj is a file"
+	fi
+done
+
+# C-styled for loops
+
+for (( var=1; var<=4; var++ )); do
+	echo "number is $var"
+done
+
+# while loop
+
+number=10
+
+while [ $number -gt 7 ]; do
+	echo $number
+	number=$(( $number-1 ))
+done
+
+# nested loops
+
+for (( v1=1; v1<=3; v1++ )); do
+	echo "Start $v1:"
+	for (( v2=1; v2<=3; v2++ )); do
+		echo " Inner loop: $v2"
+	done
+done
+
+# most common 'for' usage is iterating through csv files
+
+IFS=$'\n'
+for text in $(cat /etc/passwd); do
+	echo "This line $text ++ contains"
+	IFS=:
+	for field in $text; do
+		echo " $field"
+	done
+done
+
+# break command
+
+for number in 100 101 102 103 104; do
+	if [ $number -eq 103 ]; then
+		echo "$number is ambulance"
+		break
+	fi
+	echo "Number: $number"
+done
+
+val=1
+while [ $val -lt 5 ]; do
+	if [ $val -eq 4 ]; then
+		break 
+	fi
+	echo "Iteration: $val"
+	val=$(( $val+1 ))
+done
+
+# continue command
+
+for (( num=1; num<=10; num++ )); do
+	if [ $num -gt 0 ] && [ $num -lt 5 ]; then
+		continue
+	fi
+	echo "Iteration num: $num"
+done
+
+# redirecting loop output
+
+for (( n=1; n<=10; n++ )); do
+	echo "Number is $n"
+done >file.txt
+
+echo "finished."
+
+# useful examples
+
+# finding executables
+
+IFS=:
+for dir in $PATH; do
+	echo "$dir:"
+	for file in $dir/*; do
+		if [ -x $file ]; then
+			echo " $file"
+		fi
+	done
+done
+
+
+
+
+
+
+
+
+
+
+
+
+

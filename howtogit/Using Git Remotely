@@ -1,0 +1,10 @@
+# create absolutely blank repo on github.com
+# create a dir for it on computer
+# cd into it
+git init
+git remote add origin <urlAtGitHub>
+git remote -v # to check remotes
+git push -u origin master  # -u is for tracking the branch if pushing first time
+# then we can just print 'git push' instead of git push -u origin master 
+git push origin <branchName> # to push a new branch
+git push origin --delete <branchName>  # to delete a branch on remote

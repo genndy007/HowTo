@@ -1,0 +1,24 @@
+https://github.com/joshnh/Git-Commands
+Git Cheatsheet
+
+git status              # check repo status
+git --help              # heeelppp
+git init                # initialize a repo
+git add .               # add everything to a commit
+git rm <file>           # delete file from repo and from system
+git commit -m "msg"     # commit
+git log                 # check log
+git log --oneline       # in one line
+git log --graph         # in graph view
+git describe <branch or commit>     # print info about commit or branch
+git checkout <branch>   # go to some commit
+git checkout -b <branch>    # create branch and go to it
+git revert <commitHash>   # revert to some commit (safe)
+git reset --hard  # deletes files, strongest
+git reset --soft  # changes commit but not delete other commits
+git reset --mixed # default setting, doesn't remove files
+git rm -r --cached .  # to delete all cached files
+						for managing in .gitignore
+then git add .; git commit to apply the changes if first time
+
+

@@ -1,0 +1,24 @@
+To send two parameters
+./script3 3 5
+
+Parameters:
+$0 script's name
+$1 first param
+$2 second param
+Until the $9 (ninth param)
+
+Params can be strings too
+./myscript Adam
+
+#!/bin/bash
+echo Hello $1 how do you do 
+
+If need more than 9 params, use curly braces, like this ${10}
+
+$# is variable for params num
+
+${!#} last param variable
+
+$* holds all params as one value
+
+$@ holds them as separate

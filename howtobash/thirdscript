@@ -1,0 +1,85 @@
+#!/bin/bash
+
+echo $0 # script name
+echo $1 # 1 param
+echo $2 # 2 param
+echo $3 # if not to write a param in call it would be nothing printed
+
+total=$(( $1+$2 ))
+echo Total is $total
+
+if [ -n "$1" ]; then
+	echo "There is first parameter"
+else
+	echo "No first param"
+fi
+
+# $# is param amout variable
+echo There were $# params passed
+
+# ${!#} last parameter variable
+echo Last param is ${!#}
+
+echo "The first variable \$* method: $*"
+echo "----------"
+echo "The second variable \$@ method: $@"
+
+# to see difference between $* and $@
+
+total=1
+for var in "$*"; do
+	echo "\$* ======> #$total=$var"
+	total=$(( $total+1 ))
+done
+total=1
+for var in "$@"; do
+	echo "\$@ ======> #$total=$var"
+	total=$(( $total+1 ))
+done
+
+# shift command
+
+#total=1
+#while [ -n "$1" ]; do # while loop starts
+#	echo "#$total = $1"
+#	total=$(( $total+1 ))
+#	shift
+#done
+
+# BASH SCRIPTING OPTIONS
+
+while [ -n "$1" ]; do
+	case "$1" in
+	-a) echo "-a option" ;;
+	-b) echo "-b option" ;;
+	-c) echo "-c option" ;;
+	--)
+		shift
+		break
+		;;
+	*) echo "option $1 not recognized" ;;
+	esac
+	shift
+done
+total=1
+for param in $@; do
+	echo "#$total: $param"
+	total=$(( $total+1 ))
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

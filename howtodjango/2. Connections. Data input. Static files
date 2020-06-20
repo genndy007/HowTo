@@ -1,0 +1,791 @@
+---2.1------CONNECTIONS BETWEEN MODELS---------------
+
+Let's divide adverts to groups:
+create Rubric class at bboard/models.py
+===
+class Rubric(models.Model):   # this model contains only one declared field `name`
+    name = models.CharField(max_length=20, db_index=True, verbose_name = 'Name')
+
+    class Meta:
+        verbose_name_plural = 'Rubrics'
+        verbose_name = 'Rubric'
+        ordering = ['name']
+===
+Now we need to add field of external key to Bb model that will establish connection
+between Bb model (advert) and Rubric model (rubric). Thus, we will create one-to-many
+connection, so that one record of Rubric model will connect to random number of 
+records of Bb model. In professional database language, Rubric model is primary, and
+Bb model is secondary.
+Realization:
+create in Bb model a `rubric` field, then add some expression:
+open bboard/models.py:
+add
+===
+class Bb(models.Model):
+	. . .
+	rubric = models.ForeignKey('Rubric', null=True, on_delete=models.PROTECT,
+	verbose_name='Rubric') # ForeignKey gives field of external key, where will key of
+							record be kept in fact
+
+	class Meta:
+		. . .
+===
+First parameter of ForeignKey() is:
+* class link (if primary model code is earlier than secondary)
+* name of class string (if secondary earlier - as we now have)
+null param means we don't have to fill this field (it is mandatory because we cannot 
+create mand-to-fill field in model that contains records)
+on_delete param regulates cascade deletions of secondary model records, PROTECT value
+means prohibition of those deletions (for some dummy not to delete sth important)
+
+Now we need to save it and make migrations that will bring needed changes to database
+structures:
+
+python3 manage.py makemigrations bboard
+
+Then we need to execute our created migration:
+
+python3 manage.py migrate
+
+Now register new model at admin site by:
+open bboard/admin.py
+add
+===
+from .models import Rubric
+admin.site.register(Rubric)
+===
+Now we can add some rubrics to Rubric model at admin site. 
+
+-----2.2------STRING REPRESENTATION OF MODEL-----------------
+
+At admin site, at Rubric records we again see <class name> object <record key>
+And again we can create model editor (look 1.15) but it is better for models with
+SEVERAL meaningful fields, now we have only one such field.
+
+Another way is to override (pereopredelit')  __str__() method at model class.
+__str__() returns string representation of class.
+For it:
+open bboard/models.py
+add
+===
+class Rubric(models.Model):
+	. . .
+	def __str__(self):
+		return self.name
+	
+	class Meta:
+		. . .
+===
+Now Rubric records have another, better look :)
+Also we should add displaying rubric at list of Bb records:
+open bboard/admin.py
+add
+===
+class BbAdmin(admin.ModelAdmin):
+	list_display = ('title', 'content', 'price', 'published', 'rubric') # add rubric 
+																		to list
+	. . .
+===
+
+----2.3-------URL-PARAMETERS AND PARAMETRIZED REQUESTS-----------------
+
+It's logical to break adverts into rubrics not only in keeping but also in printing
+on the screen. We are going to create on our for now only page a navigation panel.
+
+For filter controller to be able to filter out adverts that are related to this group,
+it needs to get rubric key. Most convenient way to transfer this key is with 
+internet-address , via GET-parameter: /bboard/?rubric=<rubric key>
+
+BUUUUUUT Django offers us another opportunity to perform transfering parameters -
+right as part in path of internet-address:
+bboard/rubric/<rubric key> or even bboard/<rubric key>. In other words, via URL-
+parameters. 
+Doing this:
+1. bboard/urls.py add
+===
+from .views import index, by_rubric
+
+urlpatterns = [
+	path('<int:rubric_id>/', by_rubric),  # routes w/ url-param called parametrized
+	     # url-param      # controller for it 
+	path('', index),
+]
+===
+
+2. bboard/views.py add
+===
+from .models import Rubric
+
+def by_rubric(request, rubric_id):     # controller for rubrics
+    bbs = Bb.objects.filter(rubric=rubric_id)
+    rubrics = Rubric.objects.all()
+    current_rubric = Rubric.objects.get(pk=rubric_id)
+    context = {'bbs': bbs, 'rubrics': rubrics, 'current_rubric': current_rubric}
+    return render(request, 'bboard/by_rubric.html', context)
+===
+
+3. templates/bboard 
+create by_rubric.html for by_rubric() controller
+===
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type"
+              content="text/html; charset=utf-8">
+        <title>{{ current_rubric.name }} - Adverts Board</title>
+    </head>
+    <body>
+        <h1>Adverts</h1>
+        <h2>Rubric: {{ current_rubric.name }}</h2>
+        <div>
+            <a href="/bboard/">Main Page</a>
+            {% for rubric in rubrics %}
+                <a href="/bboard/{{ rubric.pk }}">{{ rubric.name }}</a>
+            {% endfor %}
+        </div>
+        {% for bb in bbs %}
+            <div>
+                <h2>{{ bb.title }}</h2>
+                <p>{{ bb.content }}</p>
+                <p>{{ bb.published|date:"d.m.Y H:i:s" }}</p>
+            </div>
+        {% endfor %}
+    </body>
+</html>
+===
+
+4. bboard/views.py
+change index()
+===
+def index(request):    # realizing output of navigation panel
+    bbs = Bb.objects.all()
+    rubrics = Rubric.objects.all()
+    context = {'bbs': bbs, 'rubrics': rubrics}
+    return render(request, 'bboard/index.html', context)
+===
+
+5. templates/bboard/index.html
+change to:
+===
+<!DOCTYPE html>   <!-- Realizing navigation panel output -->
+<html>
+    <head>
+        <meta http-equiv="Content-Type"
+        content="text/html; charset=utf-8">
+        <title>Main - Advert Board</title>
+    </head>
+    <body>
+        <h1>Adverts</h1>
+        <div>
+            <a href="/bboard/">Main Page</a>
+            {% for rubric in rubrics %}
+                <a href="/bboard/{{ rubric.pk }}/">{{ rubric.name }}</a>
+            {% endfor %}
+        </div>
+        {% for bb in bbs %}
+            <div>
+                <h2>{{ bb.title }}</h2>
+                <p>{{ bb.content }}</p>
+                <p><a href="/bboard/{{ bb.rubric.pk }}/">
+                    {{ bb.rubric.name }}</a></p>
+                <p>{{ bb.published|date:"d.m.Y H:i:s" }}</p>
+            </div>
+        {% endfor %}
+    </body>
+</html>
+===
+
+By aaaaaalllllll of this code we added hyperlinks (main page, real estate, transport)
+on our bboard site.
+
+-----2.4----INTERNET-ADDRESSES REVERSE RESOLUTION---------------------------
+
+As we see, in code above hyperlinks are right in templates so if we want to change
+template internet address we will need to make a loooot of changes. But we can avoid
+all those troubles if we use Django tool called reverse resolution (razreshenie)
+of internet addresses.
+What it's core:
+* we indicate route that forms us needed internet address and if it is parametrized,
+url-parameters values
+* based on everything of it Django by itself generates right internet address
+
+To realize it:
+1. Give names to needed routes (create named routes by this)
+open bboard/urls.py
+add
+=== 
+urlpatterns = [
+	path('<int:rubric_id>/', by_rubric, name='by_rubric'),
+	path('', index, name='index')  # name for routes is in name parameter
+] 
+===
+
+2. Using template engine "url" for creating internet addresses in hyperlinks tags
+open templates/bboard/index.html
+===
+find:
+<a href="/bboard/{{ rubric.pk }}/">
+change to:
+<a href="{% url 'by_rubric' rubric.pk %}">
+===
+So for url tag:
+first parameter is route name
+second parameter is url-parameter value that needs to be inserted in resulting 
+internet address
+
+This way also
+===
+find:
+<a href="/bboard/">
+change to:
+<a href="{% url 'index' %}">
+===
+index route is not parameterized so no second parameter for it.
+Also we need to make those changes to all of our hrefs in both templates.
+Then everything must work :) 
+
+----2.5---FORMS THAT ARE RELATED TO MODELS------------
+
+We need to create one more page - for adding new adverts to database.
+
+For data input HTML offers so called web-forms. Their creation and, the most 
+important, processing at server side is quite hard and painstaking. But we are using
+Django, so we do not need to care of it))
+
+To start, let's declare "form that is related to model" class. This form can 
+generate tags that create control elements in this form, check data for being
+correct, and, finally, save it in model that form is related to.
+
+Let's create such form that is related to Bb model, its class name will be BbForm
+To do it:
+create bboard/forms.py
+add in it:
+===
+from django.forms import ModelForm
+
+from .models import Bb
+
+class BbForm(ModelForm):
+	class Meta:
+		model = Bb          # model and field are metadata that define our form
+		fields = ('title', 'content', 'price', 'rubric')
+===
+
+----2.6---CONTROLLERS-CLASSES------------------
+
+We can process forms in controller-functions, but let's apply high-level controller-
+class.
+open bboard/views.py
+add
+===
+from django.views.generic.edit import CreateView
+
+from .forms import BbForm
+
+class BbCreateView(CreateView):
+	template_name = 'bboard/create.html'   # path to template 
+	form_class = BbForm                    # form class that is related to model
+	success_url = '/bboard/'               # where to redirect if success
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		context['rubrics'] = Rubric.objects.all()
+		return context
+===
+
+Now let's get started with template:
+create templates/bboard/create.html
+fill with:
+===
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content_Type"
+        content="text/html; charset=utf-8">
+        <title>Adding an Advert - Advert Board</title>
+    </head>
+    <body>
+        <h1>Adding an Advert</h1>
+        <div>
+            <a href="{% url 'index' %}">Main Page</a>
+            {% for rubric in rubrics %}
+                <a href="{% url 'by_rubric' rubric.pk %}">
+                {{ rubric.name }}</a>
+            {% endfor %}
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Add">
+        </form>
+    </body>
+</html>
+===
+4 important moments:
+* form in template context is in form variable (it is created by CreateView base 
+class)
+
+* to output form used as_p() model from ModelForm class
+
+* as_p() method only generates code that creates control elements, we need to add 
+<form> tag (creates form) and <input> tag (forms submittion button) by ourselves
+In <form> we indicated POST method of data transferring but we did not indicated
+internet-address where will received in form data go next. In this case, they will go
+to the internet-address form where current page was loaded, i.e. (id est), in our case,
+to the same BbCreateView controller-class, which will successfully process and save it.
+
+* in <form> tag we had put csrf_token template engine tag. It creates a hidden field
+in form that holds number token, in case of receiving which, controller will 
+"understand" that data is from current site and that these data are trusted. This is
+part of security subsystem of Django.
+
+Everything's good but not perfect, in class BbCreateView we again hardcoded
+redirection internet-address (it is written in success_url), it is considered bad
+taste. Let's generate it via reverse resolution (razreshenie).
+
+open bboard/views.py
+change:
+===
+from django.urls import reverse_lazy
+
+class BbCreateView(CreateView):
+	. . .
+	success_url = reverse_lazy('index')
+# reverse_lazy() receives route name and url-params as parameters and returns ready
+internet-address
+	. . .
+===
+
+----2.7----TEMPLATES INHERITANCE--------------------
+
+If we look at our templates we gonna see many pretty identical code: head section,
+navigation panel, service tags. It makes whole size of templates bigger, and, the
+worst, it makes them harder to maintain.
+We CAN solve this problem, Django offers us magnificent mechanism called template
+inheritance.
+It is similar to python class inheritance.
+Basic template declares in it so called blocks. They define place in templates where
+will the content from templates be placed
+
+Implement it:
+create templates/layout directory
+create layout/basic.html (it will be our basic template where will identical code
+from other templates be kept)
+Our blocks:
+* title (will be placed in <title> tag and used to create unique page name)
+* content (for placing unique content)
+It's code:
+===
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Control-Type"
+    content="text/html; charset=utf-8">
+    <title>{% block title %}Main Page{% endblock %}
+     - Adverts Board</title>
+</head>
+<body>
+    <header>
+        <h1>Adverts</h1>
+    </header>
+    <nav>
+        <a href="{% url 'index' %}">Main Page</a>
+        <a href="{% url 'add' %}">Add</a>
+        {% for rubric in rubrics %}
+            <a href="{% url 'by_rubric' rubric.pk %}">
+                {{ rubric.name }}</a>
+        {% endfor %}
+    </nav>
+    <section>
+        {% block content %}
+        {% endblock %}
+    </section>
+</body>
+</html>
+===
+
+Now let's rewrite bboard/index.html to be derivative from layout/basic.html template
+===
+{% extends "layout/basic.html" %}
+
+{% block content %}
+{% for bb in bbs %}
+<div class="b">
+    <h2>{{ bb.title }}</h2>
+    <p>{{ bb.content }}</p>
+    <p><a href="{% url 'by_rubric' bb.rubric.pk %}">
+        {{ bb.rubric.name }}</a></p>
+    <p>{{ bb.published|date:"d.m.Y H:i:s" }}</p>
+</div>
+{% endfor %}
+{% endblock %}
+===
+
+Rewrite 
+
+bboard/by_rubric.html
+===
+{% extends "layout/basic.html" %}
+
+{% block title %}{{ current_rubric.name }}{% endblock %}
+
+{% block content %}
+<h2>Rubric: {{ current_rubric.name }}</h2>
+{% for bb in bbs %}
+<div>
+    <h2>{{ bb.title }}</h2>
+    <h2>{{ bb.content }}</h2>
+    <p>{{ bb.published|date:"d.m.Y H:i:s" }}</p>
+</div>
+{% endfor %}
+{% endblock %}
+===
+
+bboard/create.html
+===
+{% extends "layout/basic.html" %}
+
+{% block title %}Adding an Advert{% endblock %}
+
+{% block content %}
+<h2>Adding an Advert</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Add">
+</form>
+{% endblock %}
+===
+So inheritance on practice can radically reduce amount of templates code.
+
+----2.8---STATIC FILES------------------------
+
+To finish our site we need some beauty in it. 
+style.css file will help with it.
+Files that are not processed by program and are sent to client as they are, called
+static.
+Static files:
+* stylesheets
+* graphical images etc
+
+By default, django wants us to keep them at folder "static" in app folder, 
+but are able to change it (look text11)
+style.css
+===
+header h1 {
+    font-size: 40pt;
+    text-transform: uppercase;
+    text-align: center;
+    background: url("bg.jpeg") left / auto 100% no-repeat;
+}
+nav {
+    font-size: 16pt;
+    width: 150px;
+    float: left;
+}
+nav a {
+    display: block;
+    margin: 10px 0px;
+}
+section {
+    margin-left: 170px;
+}
+===
+
+Soooo...
+create bboard/static/bboard directory
+save there style.css and bg.jpg (some picture)
+
+change layout/basic.html to:
+
+===
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+	<head>
+	. . .
+	<link rel="stylesheet" type="text/css" href="{% static 'bboard/style.css' %}">
+	. . .
+	</head>
+	. . .
+</html>
+===
+Most important directives, tags and filters are built-in template engine core, and
+some that are less important we need to load.
+It's the end of developing this site, now we can have some fun, e.g. try to add new
+advert and not to write some parameters of it (name etc)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

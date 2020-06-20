@@ -1,0 +1,548 @@
+---1.1--------INSTALL DJANGO-------
+
+21  sudo apt-get install python3-pip
+   22  sudo apt-get update                                                         
+   23  sudo apt-get install python3-pip
+   24  pip3 --version
+   25  sudo pip3 install Django
+   26  django-admin --version
+
+-----1.2--------CREATING DJANGO PROJECT--------------
+
+django-admin startproject samplesite
+
+Project structure:
+
+samplesite                   # main folder
+	manage.py               # actions on project
+	samplesite              # forms python packet
+		_init_.py                 # confirms inner folder is a packet
+		settings.py               # settings of project
+		urls.py                   # module with routes
+		wsgi.py                   # module that connects project with web server
+                                    used to post a ready website in the Net
+
+--------1.3----DEBUG SERVER--------------
+
+python3 manage.py runserver
+
+at 127.0.0.1:8000 by default
+
+
+----1.4-----APPLICATIONS-----------
+
+python3 manage.py startapp bboard
+
+Application structure (bboard folder inside of outer samplesite):
+
+bboard                 # app folder
+	migrations         # nested packet folder with migrations (gen by Django)
+		__init__.py    # folder is packet
+	__init__.py        # folder is packet
+	admin.py           # admin settings module
+	apps.py            # app settings module
+	models.py          # module with models
+	tests.py           # testing module
+	views.py           # module with controllers (views)
+
+To register new app in project:
+
+open settings.py
+add
+===
+INSTALLED_APPS = [
+	. . .
+	'bboard.apps.BboardConfig',
+]
+===
+-------1.5-----CONTROLLERS (VIEWS)-------------
+
+Controller (view) in django is code that executes in response to client's request
+that contains internet-address in certain format. All actions of preparing output and
+processing data from user happens in the controller (view). Controller can be a 
+function or a class.
+
+Create a controller that outputs text:
+
+open bboard/views.py
+add
+===
+from django.http import HttpResponse
+
+def index(request):         # our controller
+	return HttpResponse("Here is billboard")
+===
+at 127.0.0.1:8000/bboard
+
+----1.6-------ROUTES AND ROUTER---------------
+
+To make our controller work we need:
+
+* declare connection between templated internet-address and controller, in other words,
+route
+
+T I-A must contain only path without protocol, host address, port number, GET-
+parameters, anchor name. It must end with / and must not start with / 
+
+* formalize all routes into a routes list
+
+* formalize in strictly defined format for router subsystem be able to use ready list
+in work 
+
+To make index() work, we need to add it:
+
+open samplesite/urls.py
+add
+===
+from django.contrib import admin
+from django.urls import path
+
+from bboard.views import index
+
+urlpatterns = [
+	path('bboard/', index),
+	path('admin/', admin.site.urls),
+]
+===
+Available
+at localhost:8000/bboard
+
+To be easier to work with route list, we need to create hierarchy of routes lists.
+For it, we need mark routes that mark on app lists, in project list. In app lists we
+are going to write all controllers that are programming logic of our site.
+
+open bboard/urls.py (create if none)
+add
+===
+from django.urls import path
+
+from .views import index
+
+urlpatterns = [
+	path('', index),
+]
+===
+
+open samplesite/urls.py
+add
+===
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+	path('bboard/', include('bboard.urls')),
+	path('admin/', admin.site.urls),
+]
+
+-------1.7-------MODELS---------------
+
+In django, for implementation of keeping any creations with strictly defined structures,
+we will need only to declare one class called MODEL. Models are declared at app level.
+Their declaring code must be written in module models.py of app packet.
+
+So let's declare a model Bb that will represent a notification board with next fields:
+
+* title (string, 50 symbols)
+* content (memo) - text of notification
+* price (float)
+* published (datetime, default=presentdatetime)
+
+For it:
+open bboard/models.py
+add
+===
+from django.db import models
+
+class Bb(models.Model):    # Bb model is subclass of Model class from django.db.models
+	title = models.CharField(max_length=50)
+	content = models.TextField(null=True, blank=True)
+	price = models.FloatField(null=True, blank=True)
+	published = models.DateTimeField(auto_now_add=True, db_index=True)
+===
+
+------1.8--------MIGRATIONS-----------------
+Migration is Python module that created by Django based on certain model and needed to
+form all structures in database that model needs: tables, fields, indices, rules and
+connections.
+
+To make migration based on Bboard app models that were not changed from last migration
+generation:
+
+python3 manage.py makemigrations bboard
+
+To look at resulted SQL-code of our migration:
+
+python3 manage.py sqlmigrate bboard 0001
+
+First doing migraions is recommended to all apps that are in project.
+For it:
+
+python3 manage.py migrate
+
+------1.9--------DJANGO CONSOLE---------------
+
+Django console is edition of Python Shell. The main difference is that path to the 
+project folder in which console is started is included in set of searching modules
+path.
+
+To start it:
+
+python3 manage.py shell
+
+----1.10------WORKING WITH MODELS------------------
+
+>>> from bboard.models import Вb 
+>>> b1 = Bb(title='Дaчa', соntеnt='Общество "Двухэтажники". '  # writing our model
+	+   \ 'Два этажа, кирпич, свет, газ, канализация', price=500000) 
+>>> b1.save()   # saves model into memory
+>>> b1.рk       # returns value of key field
+ 
+We can go to any field of writing, using attributes of model:
+>>> b1.title
+>>> b1.content
+>>> b1.price
+
+Another way to create model:
+>>> b2 = Bb()
+>>> b2.title = "Car"
+>>> b2.content = "Zhiga"
+>>> b2.save()
+>>> b2.pk
+2
+
+We can also use objects attribute to create model:
+>>> Bb.objects.create(title="House", content="3 floors, brick", price=888888)
+# all model classes support attributes of objects class
+
+Output keys and headers:
+>>> for b in Bb.objects.all():      # all() returns set of writings
+...		print(b.pk, ": ", b.title)
+
+Sort models by header:
+>>> for b in Bb.objects.order_by('title'):	  # order_by(p1) sorts by parameter
+...		print(b.pk, ": ", b.title)
+
+Filter with critery:
+>>> for b in Bb.objects.filter(title="House"):
+...		print(b.pk, ": ", b.title)
+
+Find some model by pk:
+>>> b = Bb.objects.get(pk=2)
+>>> b.title
+Car
+
+get(), filter() has same purpose, but get() finds only one model and works faster than
+filter()
+
+Delete some model:
+>>> b.delete()
+
+Changing index() to output our adverts:
+open bboard/views.py
+===
+from django.http import HttpResponse
+
+from .models import Bb
+
+def index(request):
+	s = 'Adverts list\r\n\r\n\r\n'
+	for bb in Bb.objects.order_by('-published'):  # -published means reversed
+		s += bb.title + '\r\n' + bb.content + '\r\n\r\n'
+	return HttpResponse(s, content_type='text/plain; charset=utf-8')
+										# if we do not write charset=utf-8 then 
+										browser will think our text is HTML-code
+										and will output it incorrectly
+===
+
+----1.11---------TEMPLATES (NOT PATTERNS)-------------------
+Template is a sample for forming document which will be presented to client:
+web page, XML or PDF file, etc. Django subsystem called template engine, downloads
+templates, unites it with data from models, user, others, and forms full document that
+will be sent to client.
+
+In webpages, template is file with HTML-code that contains special template engine 
+commands: 
+* directives      # point to put some value into some place of HTML-code
+* tags            # control generation of contents of resulting document
+* filters         # perform transformations of some value before output
+
+By default, template engine looks for all templates at templates folders that are
+nested into app packets folders. Templates of webpages must be *.html
+
+We need to create bboard/templates folder, and bboard/templates/bboard folder.
+
+Writing our first Django-template, its coordinates: bboard/templates/bboard/index.html
+index.html:
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type"
+        content="text/html; charset=utf-8">
+        <title>Main - Advert Board</title>
+    </head>
+    <body>
+        <h1>Adverts</h1>
+        {% for bb in bbs %}        # for...in cycle 
+        <div>
+            <h2>{{ bb.title }}</h2>
+            <p>{{ bb.content }}</p>
+            <p>{{ bb.published|date:"d.m.Y H:i:s" }}</p>
+        </div>
+        {% endfor %}
+    </body>
+</html>
+
+----1.12---------TEMPLATE RENDERING, ABBREVIATIONS------------------
+
+open bboard/views.py and change it to:
+===
+from django.http import HttpResponse
+from django.template import loader
+
+from .models import Bb
+
+def index(request):     # using low-level tools
+    template = loader.get_template('bboard/index.html') # download template
+    bbs = Bb.objects.order_by('-published')
+    context = {'bbs': bbs}  # context is set of data that must be available inside of
+							template as variables and with whom template engine will
+							unite template to get output document (type dict: keys -
+							variables in templates, values - values of variables)
+    return HttpResponse(template.render(context, request))  # rendering is uniting 
+														   templates with context data
+===
+
+Django also presents higher-level tools to do things like render and others - 
+functions-shortcuts. This way, function-shortcut render() from module django.shortcuts
+lets perform template rendering in one expression. Let's try it:
+
+Changing bboard/views.py to:
+===
+from django.shortcuts import render
+
+from .models import Bb
+
+def index(request):    # the shortcut way to do rendering
+    bbs = Bb.objects.order_by('-published')
+    return render(request, 'bboard/index.html', {'bbs': bbs})
+===
+Works same way but code is shorter :)
+
+-----1.13--------ADMINISTRATING WEBSITE IN DJANGO--------------------
+
+Admin website presents access to all models that are declared in all apps that make up
+our project. We can read, change, filter, sort them. This subsystem realized in 
+standard app django.contrib.auth, work of admin site is provided by 
+django.contrib.admin app, both are registered to project at start. To use 
+django.contrib.auth, we need AT LEAST ONE TIME make migration. Then we need to create 
+super user (min passwd length = 8 letters and numbers):
+
+python3 manage.py createsuperuser 
+
+We can also change django to use russian language:
+open samplesite/settings.py
+change
+LANGUAGE_CODE = 'en-us'
+to
+LANGUAGE_CODE = 'ru-ru'
+
+Access admin site at localhost:8000/admin
+
+Authentication and authorization is django.contrib.auth app.
+
+But at start there are no bboard app and Bb model at admin website.
+To solve it:
+open bboard/admin.py
+change it to:
+===
+from django.contrib import admin
+
+from .models import Bb
+
+admin.site.register(Bb)
+===
+
+Reload admin website, now click Bbs to see list of records (not olympic) of this model
+And manage it by science tyk method ;)))
+
+----1.14-------FIELDS AND MODELS PARAMETERS-------------- 
+
+To make our life and editing of model instances easier we can:
+
+* set parameters for model and model fields:
+
+open bboard/models.py
+change to:
+===
+from django.db import models
+
+class Bb(models.Model):  # verbose names are adequate names while editing
+    title = models.CharField(max_length=50, verbose_name='Product')
+    content = models.TextField(null=True, blank=True, verbose_name='Description')
+    price = models.FloatField(null=True, blank=True, verbose_name='Price')
+    published = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Published')
+
+    class Meta:
+        verbose_name_plural = 'Adverts'  # Adverts instead of Bbs
+        verbose_name = 'Advert'          # Advert instead of Bb
+        ordering = ['-published']        # applying ordering in model 
+===
+So we applied ordering in model, it spreads on everywhere, 
+we can change code of index() controller function:
+open bboard/views.py
+===
+def index(request):
+	bbs = Bb.objects.all()
+	. . .
+===
+
+-----1.15--------MODEL EDITOR--------------
+
+As we can see in list of model instances, we have <class> object <key>, so we do not 
+understand what's inside. It's by default, but we can change it, by declaring
+class-editor.
+To do this:
+open bboard/admin.py
+replace code by:
+===
+from django.contrib import admin
+
+from .models import Bb
+
+									 # ModelAdmin from django.contrib.admin
+class BbAdmin(admin.ModelAdmin):     # editor is ModelAdmin subclass
+    list_display = ('title', 'content', 'price', 'published') # what should we see in
+																in records list
+    list_display_links = ('title', 'content')   # what of those should be hyperlinks
+                                                  to pages of changing record
+    search_fields = ('title', 'content', )  # on what should filter base
+
+
+admin.site.register(Bb, BbAdmin)
+===
+
+Now potykaysya at admin site for some practice.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,5 @@
+git branch <name>  # create a branch
+git checkout -b <name> # create a branch and switch to it
+git checkout <name> # switch to some branch "<name>"
+git branch -a # list all branches
+git branch -d <name> # delete a branch

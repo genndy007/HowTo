@@ -1,0 +1,61 @@
+-------for loop
+for enables to loop on a list of items
+this is often a fundamental format of for loop
+
+for myvar in vars; do
+
+some code
+
+done
+
+We may use tabs for convenience 
+
+---------field separators
+These are treated as fields:
+space, tab, newline
+We can change internal field separator:
+IFS=$'\n'
+
+We can iterate through even a directory.
+If a directory name contains spaces, put it in quotes.
+
+/folder/*     # means all files with names (file globbing)
+
+-------------for loop C-styled
+syntax:
+for (( var = start; condition; step ))
+
+--------While loop
+syntax:
+while condition; do
+
+commands
+
+done
+
+---------------nested loop
+we can just nest loops
+
+Iterating over file lines in the most common usage of for loop in bash
+
+------------controlling the loop
+There are break and continue commands
+
+-------Redirecting the loop output
+
+syntax:
+done >file.txt
+
+$PATH holds all the directories
+
+
+
+
+
+
+
+
+
+
+
+

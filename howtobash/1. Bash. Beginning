@@ -1,0 +1,170 @@
+------We can execute some commands at once by writing them via ;
+
+pwd; whoami
+
+--------To change max args number:
+
+getconf ARG_MAX
+
+-------Create file:
+
+touch file
+
+-------To set to bash:
+
+#!/bin/bash
+
+--------Comments:
+
+# comment
+
+-------Make file executable:
+
+chmod +x ./myscript
+
+--------Execute:
+
+./myscript
+
+-------Message output:
+
+echo "message"
+
+-------Home dir:
+
+$HOME
+
+-------To write $ sign:
+
+echo "I have \$1"
+
+----------Variables:
+
+grade=5
+person="Adam"
+echo "$person, $grade"
+
+---------To get information from commands in bash:
+one way:
+mydir=`pwd`   # using backticks
+second way:
+mydir=$(pwd)
+
+--------Math operations:
+
+var=$((a+b))
+may use + - * /
+
+-------if-then construction
+
+if command
+then
+commands
+fi
+
+user=gennadiy
+if grep $user /etc/passwd
+then
+echo "The user $user exists"
+fi
+
+-------if-then-else
+
+if command
+then
+commands
+else
+commands
+fi
+
+--------if-then-elif
+
+if com1
+then
+coms
+elif com2
+then
+coms
+fi
+
+---------numbers Comparison
+
+n1 -eq n2   # equals
+n1 -ge n2   # greater or equal
+n1 -gt n2   # greater
+n1 -le n2   # less or equal
+n1 -lt n2   # less than
+n1 -ne n2   # not equal
+
+val1=6
+if [ $val1 -gt 5 ]
+then
+echo "$val1 greater than 5"
+else
+echo "$val1 not greater than 5"
+fi
+
+-------strings comparison
+
+str1 = str2    # equal
+str1 != str2   # not equal
+str1 < str2    # less than
+str1 > str2    # more than
+-n str1        # str1 length more than 0
+-z str1        # str1 length is 0
+
+Also > and < need to be screened 
+if [ 6 \> 5 ]
+
+val1=text
+val2="another text"
+if [ $val1 \> $val2 ]   # gives "too many args" error 
+
+if [ $val1 \> "$val2" ] # does not gives an error
+
+lowercase is more than LOWERCASE
+
+sort command sorts by increase by default
+BUUUUUT
+in comparison commands UPPERCASE is less than lowercase
+
+
+--------File Checks
+
+-d file   # exists and is directory
+-e file   # exists
+-f file   # exists and is file
+-r file   # exists and able for reading
+-s file   # exists and not empty
+-w file   # exists and able for writing
+-x file   # exists and able for executing
+file1 -nt file2   # file1 is newer than file2
+file1 -ot file2   # file1 is older than file2
+-O file   # exists and current user is owner
+-G file   # exists and group id matches current user group id
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

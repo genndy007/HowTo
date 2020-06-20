@@ -1,0 +1,130 @@
+----3.1-------PREPARATION-----------------
+
+1. Install python
+2. Install django
+3. Install db (sqlite, mysql, postgresql, oracle, etc)
+
+--3.2----CREATING DJANGO PROJECT-------------
+
+[] means unnecessary
+
+Single command:
+
+django-admin startproject <name> [<path to project folder>]
+
+In future, we can move project folder and rename it, it will not affect project
+working.
+
+-------3.3-------- PROJECT SETTINGS ---------------
+
+Settings are in settings.py module of config package, most of them by default are
+optimal. All parameters are held in variables.
+
+3.3.1 *** MAIN SETTINGS
+
+* BASE_DIR - sets project folder path
+
+* DEBUG - points site work mode: debugging (True), operational (False). In operational
+mode there are no details about the errors that are happening.
+
+* DEFAULT_CHARSET - sites encoding by default (utf-8 by default)
+
+* FILE_CHARSET - text files encoding, particularly templates, by default utf-8
+
+* ROOT_URLCONF - way to module where are project level routes written
+
+* SECRET_KEY - used by django to protect project
+
+3.3.2 *** DATABASE PARAMETERS
+
+All databases used in project are in DATABASE parameter, when creating a project it 
+becomes:
+
+DATABASES = {
+	'default': {
+		'ENGINE': 'django.db.backends.sqlite3',
+		'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+	}
+}
+
+By default, django uses SQLite format, and points single database, db.sqlite3 file 
+that is in project folder
+
+'ENGINE' is for db format:
+* django.db.backends.sqlite3 - sqlite
+* django.db.backends.mysql - mysql
+* django.db.backends.postgresql - postgresql
+* django.db.backends.oracle - oracle
+
+'NAME' is for path to db file
+
+'TIME_ZONE' is for timezone that is held in database.
+
+Parameters below are ONLY used in server databases
+
+* HOST - internet address of database computer
+* PORT - tcp-port number (that connects to db)
+* USER - from what user django connects to db
+* PASSWORD - user passwd that connects to db
+* CONN_MAX_AGE - time in what database connection will be open
+* OPTIONS - options, specified for special db
+
+In most cases, websites use only one database:
+Example:
+
+DATABASES = {
+	'default' = {
+		'ENGINE': 'django.db.backends.mysql',
+		'HOST': 'localhost',
+		'USER': 'siteuser',
+		'PASSWORD': 'sitepassword',
+		'NAME': 'site'
+}
+}
+
+3.3.3 *** REGISTERED APPS LIST
+
+In default project it looks like:
+
+INSTALLED_APPS = [
+	'django.contrib.admin',   # for admin site func
+	'django.contrib.auth',    # for controlling access (used by admin site)
+	'django.contrib.contenttypes',  # holds all models list from all apps 
+	'django.contrib.sessions',   # for keeping client's data at server side
+	'django.contrib.messages',   # for pop-ups
+	'django.contrib.staticfiles',   # for processing static files
+]
+
+If smth is not needed, it can be deleted from this list, in this case, also needed
+to remove its middlewares.
+
+
+3.3.4 *** REGISTERED MIDDLEWARES LIST
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
